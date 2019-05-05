@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 
-	if err := scanLogDirectory(); err != nil {
+	if err := scanLogDirectory(MODE_ALL_IN_ONE); err != nil {
 		return
 	}
 
@@ -41,7 +41,7 @@ func main() {
 	fmt.Println("\n=== FINISH YOOOOOOOOOOOO CAKKK !!! ===")
 }
 
-func deleteOutputFile(){
+func deleteOutputFile() {
 	DeleteOutputFile(GENERATED_VALIDATE_USE_FILENAME)
 	DeleteOutputFile(GENERATED_NOTIFY_SUCCESS_FILENAME)
 }
@@ -95,11 +95,11 @@ func readInputOrderFile() error {
 	return nil
 }
 
-func scanLogDirectory() error {
+func scanLogDirectory(mode int) error {
 
 	fmt.Println("\n=== Scanning log directory ===")
 
-	err := filepath.Walk(LOG_PARENT_DIR, VisitDirectory(&LogPaths))
+	err := filepath.Walk(LOG_PARENT_DIR, VisitDirectory(&LogPaths, mode))
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -117,12 +117,12 @@ func getNotifySuccessData() error {
 	filters := []Filter{
 		{GrepType: enum.GrepStandard, Value: "NOTIFY USE SUCCESS"},
 		{GrepType: enum.GrepCombined, Value: DelimSliceToString(PaymentIDs, "|")},
-		//{GrepType: enum.GrepStandard, Value: "2019-04-29"},
+		{GrepType: enum.GrepStandard, Value: "2019-04-29"},
 	}
 
 	for i, logPath := range LogPaths {
 		fmt.Printf("=== Processing NS [%d:%d] %s\n", (i + 1), len(LogPaths), logPath)
-		GenerateCommand(logPath, filters, NOTIFY_SUCCESS)
+		GenerateCommand(logPath, filters, NOTIFY_SUCCESS, MODE_ALL_IN_ONE)
 	}
 
 	return nil
@@ -136,15 +136,13 @@ func getValidateUseData() error {
 		{GrepType: enum.GrepStandard, Value: "VALIDATE USE"},
 		{GrepType: enum.GrepCombined, Value: DelimSliceToString(PromoCodes, "|")},
 		{GrepType: enum.GrepStandard, Value: "\\\\\"book\\\\\":true"},
-		//{GrepType: enum.GrepStandard, Value: "2019-04-29"},
+		{GrepType: enum.GrepStandard, Value: "2019-04-29"},
 	}
 
 	for i, logPath := range LogPaths {
 		fmt.Printf("=== Processing VU [%d:%d] %s\n", (i + 1), len(LogPaths), logPath)
-		GenerateCommand(logPath, filters, VALIDATE_USE)
+		GenerateCommand(logPath, filters, VALIDATE_USE, MODE_ALL_IN_ONE)
 	}
 
 	return nil
 }
-
-
