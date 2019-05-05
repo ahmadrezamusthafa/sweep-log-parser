@@ -18,7 +18,7 @@ func DeleteOutputFile(filePath string) {
 	}
 }
 
-func VisitDirectory(files *[]string) filepath.WalkFunc {
+func VisitDirectory(files *[]string, mode int) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Fatal(err)
@@ -26,6 +26,21 @@ func VisitDirectory(files *[]string) filepath.WalkFunc {
 
 		if match, _ := regexp.MatchString(FILE_PATTERN, info.Name()); !match {
 			return nil
+		}
+
+		if mode == MODE_ALL_IN_ONE {
+			path = fmt.Sprintf("%s%s", strings.Replace(path, info.Name(), "", -1), FILE_PREFIX)
+		}
+
+		if files != nil {
+			s := make([]interface{}, len(*files))
+			for i, v := range *files {
+				s[i] = v
+			}
+
+			if IsSliceContain(s, path) {
+				return nil
+			}
 		}
 
 		*files = append(*files, path)
@@ -73,8 +88,14 @@ func GenerateCommandOld(logPath string, filters []Filter, fromType int) {
 	}
 }
 
-func GenerateCommand(logPath string, filters []Filter, fromType int) {
-	cmd := fmt.Sprintf("zcat '%s'", logPath)
+func GenerateCommand(logPath string, filters []Filter, fromType int, mode int) {
+	cmd := fmt.Sprintf("zcat "+func() string {
+		if mode == MODE_ALL_IN_ONE {
+			return "%s"
+		}
+		return "'%s'"
+	}(), logPath)
+
 	for _, filter := range filters {
 		cmd += fmt.Sprintf(" | "+filter.GrepType.Format(), filter.Value)
 	}
