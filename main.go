@@ -181,6 +181,10 @@ func processOutput() error {
 			continue
 		}
 
+		if IS_ENABLE_NORMALIZATION {
+			row = RemoveUnexpectedQuote(row)
+		}
+
 		var nsRow UseCodeInput
 		err := jsoniter.Unmarshal([]byte(row), &nsRow)
 		if err != nil {
@@ -200,6 +204,10 @@ func processOutput() error {
 
 				if vu == "" {
 					continue
+				}
+
+				if IS_ENABLE_NORMALIZATION {
+					vu = RemoveUnexpectedQuote(vu)
 				}
 
 				var vuRow UseCodeInput
