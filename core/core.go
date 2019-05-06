@@ -170,6 +170,27 @@ func ParseJSONRequestOnly(str string) string {
 	return strb.String()
 }
 
+func RemoveUnexpectedQuote(str string) string {
+	indexs := []int{}
+	regex := regexp.MustCompile(`[a-z0-9A-Z\s]([\"])[a-z0-9A-Z\s\"]`)
+	if regex.MatchString(str) {
+		getIndex := regex.FindAllSubmatchIndex([]byte(str), -1)
+		for _, index := range getIndex {
+			if len(index) > 2 {
+				indexs = append(indexs, index[2])
+			}
+		}
+	}
+
+	r := []rune(str)
+	for _, index := range indexs {
+		r[index] = '-'
+	}
+	str = string(r)
+
+	return str
+}
+
 func AppendToFile(fileName string, buffer string) {
 
 	fmt.Printf("... Append result to %s ...\n", fileName)
