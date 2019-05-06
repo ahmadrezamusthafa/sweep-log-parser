@@ -2,12 +2,12 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/json-iterator/go"
 	. "github.com/tokopedia/sweep-log/core"
 	"github.com/tokopedia/sweep-log/core/enum"
 	"log"
-	"marisinau.com/KitaUndangAPI/util/errors"
 	"math"
 	"os"
 	"path/filepath"
@@ -162,7 +162,7 @@ func getValidateUseData() error {
 func processOutput() error {
 
 	if !IsOutputFileExist(GENERATED_NOTIFY_SUCCESS_FILENAME) && !IsOutputFileExist(GENERATED_VALIDATE_USE_FILENAME) {
-		return errors.New(fmt.Sprintf("Failed, make sure %s and %s is exist"), GENERATED_NOTIFY_SUCCESS_FILENAME, GENERATED_VALIDATE_USE_FILENAME)
+		return errors.New(fmt.Sprintf("Failed, make sure %s and %s is exist", GENERATED_NOTIFY_SUCCESS_FILENAME, GENERATED_VALIDATE_USE_FILENAME))
 	}
 
 	fmt.Println("\n=== Process final output ===")
