@@ -10,12 +10,21 @@ import (
 	"strings"
 )
 
-func DeleteOutputFile(filePath string) {
-	var err = os.Remove(GENERATED_OUTPUT_DIR + filePath)
+func DeleteOutputFile(fileName string) {
+	var err = os.Remove(GENERATED_OUTPUT_DIR + fileName)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
+}
+
+func IsOutputFileExist(fileName string) bool {
+	if _, err := os.Stat(GENERATED_OUTPUT_DIR + fileName); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
 
 func VisitDirectory(files *[]string, mode int) filepath.WalkFunc {
@@ -100,6 +109,7 @@ func GenerateCommand(logPath string, filters []Filter, fromType int, mode int) {
 		cmd += fmt.Sprintf(" | "+filter.GrepType.Format(), filter.Value)
 	}
 
+	fmt.Println(cmd)
 	output, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
 		// ignore
@@ -110,8 +120,23 @@ func GenerateCommand(logPath string, filters []Filter, fromType int, mode int) {
 		case VALIDATE_USE:
 			AppendToFile(GENERATED_VALIDATE_USE_FILENAME, ParseJSONRequestOnly(string(output)))
 		}
-
 	}
+}
+
+func GenerateCommandFinalProcess(logPath string, filters []Filter) string {
+	cmd := fmt.Sprintf("cat '%s'", logPath)
+
+	for _, filter := range filters {
+		cmd += fmt.Sprintf(" | "+filter.GrepType.Format(), filter.Value)
+	}
+
+	output, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		// ignore
+	} else {
+		return string(output)
+	}
+	return ""
 }
 
 func PipeCommands(commands ...*exec.Cmd) ([]byte, error) {
@@ -132,7 +157,7 @@ func PipeCommands(commands ...*exec.Cmd) ([]byte, error) {
 
 func ParseJSONRequestOnly(str string) string {
 	strb := strings.Builder{}
-	regex, _ := regexp.Compile(`({\\"data\\"\:[a-zA-Z0-9\,\.\s\+\-\_\{\}\"\\\:\[\]\/\(\)\@\;\&\*\'\?\#]*)]"}(\r?\n)`)
+	regex, _ := regexp.Compile(`({\\"data\\"\:[a-zA-Z0-9\,\.\s\+\-\_\{\}\"\\\:\[\]\/\(\)\@\;\&\*\'\?\#\%\!\|]*)]"}(\r?\n)`)
 	if regex.MatchString(str) {
 		var getParsing = regex.FindAllStringSubmatch(str, -1)
 		for _, group := range getParsing {
@@ -154,7 +179,7 @@ func AppendToFile(fileName string, buffer string) {
 		log.Println(err)
 	}
 	defer f.Close()
-	if _, err := f.WriteString(buffer + "\n"); err != nil {
+	if _, err := f.WriteString(buffer); err != nil {
 		log.Println(err)
 	}
 }
